@@ -12,6 +12,7 @@
       <th>Notes</th>
       <th>Start time</th>
       <th>End time</th>
+      <th>Class Room</th>
       <th colspan="3"></th>
     </tr>
   </thead>
@@ -19,10 +20,11 @@
     <% @courses.each do |course| %>
       <tr>
         <td><%= course.title %></td>
-        <td><%= course.description %></td>
-        <td><%= course.notes %></td>
+        <td><%= course.description&.truncate(30) %></td>
+        <td><%= course.notes&.truncate(20) %></td>
         <td><%= course.start_time.strftime("%I:%M %p") %></td>
         <td><%= course.end_time.strftime("%I:%M %p") %></td>
+        <td><%= course.class_room.name %></td>
         <td><%= link_to 'Show', [:teacher, course] %></td>
         <td><%= link_to 'Edit', edit_teacher_course_path(course) %></td>
         <td><%= link_to 'Destroy', [:teacher, course], method: :delete, data: { confirm: 'Are you sure?' } %></td>

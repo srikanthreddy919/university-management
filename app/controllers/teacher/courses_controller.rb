@@ -2,7 +2,7 @@ class Teacher::CoursesController < ApplicationController
   before_action :set_course, only: [:show, :edit, :update, :destroy]
   before_action :verify_authorized, only: [:index, :new]
   before_action :verify_authorized_course, only: [:show, :edit, :destroy]
-
+  before_action :set_class_rooms, only: [:new, :edit, :create]
   # GET /courses
   # GET /courses.json
   def index
@@ -29,7 +29,10 @@ class Teacher::CoursesController < ApplicationController
   def create
     @course = current_user.courses.new(course_params)
     if is_course_exist_with_same_time
-      flash[:error] = "Course already present the given timings, please change timings"
+      flash[:error] = "Course already present in the given timings, please change timings"
+      render :new
+    elsif is_class_room_occupied
+      flash[:error] = "Class room already occupied by other course, please change the class room or timings"
       render :new
     else
       respond_to do |format|
@@ -50,6 +53,9 @@ class Teacher::CoursesController < ApplicationController
     if is_course_exist_with_same_time
       flash[:error] = "Course already present in tthe given timings, please change timings"
       render :edit
+    elsif is_class_room_occupied
+      flash[:error] = "Class room already occupied by other course, please change the class room or timings"
+      render :new
     else
       respond_to do |format|
         format.html { render :edit, error: "Course already present the given timings, please change timings" }
@@ -84,20 +90,45 @@ class Teacher::CoursesController < ApplicationController
       authorize :common, :is_teacher?
     end
 
-    def is_course_exist_with_same_time
-      start_time = DateTime.new(course_params["start_time(1i)"].to_i, 
+    def start_time
+      DateTime.new(course_params["start_time(1i)"].to_i, 
       course_params["start_time(2i)"].to_i,
       course_params["start_time(3i)"].to_i,
       course_params["start_time(4i)"].to_i,
       course_params["start_time(5i)"].to_i)
-      end_time = DateTime.new(course_params["end_time(1i)"].to_i, 
+    end
+
+    def end_time
+      DateTime.new(course_params["end_time(1i)"].to_i, 
       course_params["end_time(2i)"].to_i,
       course_params["end_time(3i)"].to_i,
       course_params["end_time(4i)"].to_i,
       course_params["end_time(5i)"].to_i)
-      course = Course.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
-      return course.present?
     end
+
+    def find_courses(start_time, end_time)
+      current_user.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
+    end
+
+    def is_course_exist_with_same_time
+      courses = find_courses(start_time, end_time)
+      return courses.present?
+    end
+
+    def is_class_room_occupied
+      class_room = ClassRoom.find(course_params[:class_room_id])
+      if class_room
+        courses = class_room.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
+        return courses.present?
+      else
+        return false
+      end
+    end
+
+    def set_class_rooms
+      @class_rooms = ClassRoom.all.pluck(:name, :id)
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_course
       @course = Course.find(params[:id])
@@ -105,6 +136,6 @@ class Teacher::CoursesController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def course_params
-      params.require(:course).permit(:title, :description, :notes, :start_time, :end_time)
+      params.require(:course).permit(:title, :description, :notes, :start_time, :end_time, :class_room_id)
     end
 end

@@ -9,6 +9,7 @@
       <th>Notes</th>
       <th>Start time</th>
       <th>End time</th>
+      <th>Class Room</th>
       <th colspan="3"></th>
     </tr>
   </thead>
@@ -16,10 +17,11 @@
     <% @courses.each do |course| %>
       <tr>
         <td><%= course.title %></td>
-        <td><%= course.description %></td>
-        <td><%= course.notes %></td>
+        <td><%= course.description&.truncate(30) %></td>
+        <td><%= course.notes&.truncate(20) %></td>
         <td><%= course.start_time.strftime("%I:%M %p") %></td>
         <td><%= course.end_time.strftime("%I:%M %p") %></td>
+        <td><%= course&.class_room&.name %></td>
         <td><%= link_to 'Show', [:student, course] %></td>
         <% if is_applied_to_course(course.id) %>
           <td class="text-success">Applied <svg class="material-icon" viewBox="0 0 24 24">
