@@ -1,0 +1,7 @@
+<div class="d-flex">
+  <h1>New Course</h1>
+  <div class="ml-auto">
+    <%= link_to 'Back', teacher_courses_path, class: 'btn btn-outline-primary' %>
+  </div>
+</div>
+<%= render 'form', course: @course %>
