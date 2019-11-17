@@ -2,33 +2,28 @@ class Teacher::CoursesController < ApplicationController
   before_action :set_course, only: [:show, :edit, :update, :destroy]
   before_action :verify_authorized, only: [:index, :new]
   before_action :verify_authorized_course, only: [:show, :edit, :destroy]
-  before_action :set_class_rooms, only: [:new, :edit, :create]
-  # GET /courses
-  # GET /courses.json
+  before_action :set_class_rooms, only: [:new, :edit, :create, :update]
+  before_action :ensure_valid_timings, only: [:create, :update]
+
   def index
     @courses = current_user.courses
   end
 
-  # GET /courses/1
-  # GET /courses/1.json
   def show
     @students = @course.users
   end
 
-  # GET /courses/new
   def new
     @course = Course.new
   end
 
-  # GET /courses/1/edit
   def edit
   end
 
-  # POST /courses
-  # POST /courses.json
   def create
     @course = current_user.courses.new(course_params)
     if is_course_exist_with_same_time?
+      p "coming here"
       flash[:error] = "Course already present in the given timings, please change timings"
       render :new
     elsif is_class_room_occupied?
@@ -47,18 +42,15 @@ class Teacher::CoursesController < ApplicationController
     end
   end
 
-  # PATCH/PUT /courses/1
-  # PATCH/PUT /courses/1.json
   def update
     if is_course_exist_with_same_time?
-      flash[:error] = "Course already present in tthe given timings, please change timings"
+      flash[:error] = "Course already present in the given timings, please change timings"
       render :edit
     elsif is_class_room_occupied?
       flash[:error] = "Class room already occupied by other course, please change the class room or timings"
-      render :new
+      render :edit
     else
       respond_to do |format|
-        format.html { render :edit, error: "Course already present the given timings, please change timings" }
         if @course.update(course_params)
           format.html { redirect_to [:teacher, @course], notice: 'Course was successfully updated.' }
           format.json { render :show, status: :ok, location: [:teacher, @course] }
@@ -70,8 +62,6 @@ class Teacher::CoursesController < ApplicationController
     end
   end
 
-  # DELETE /courses/1
-  # DELETE /courses/1.json
   def destroy
     @course.destroy
     respond_to do |format|
@@ -106,16 +96,13 @@ class Teacher::CoursesController < ApplicationController
         course_params["end_time(2i)"].to_i,
         course_params["end_time(3i)"].to_i,
         course_params["end_time(4i)"].to_i,
-        course_params["end_time(5i)"].to_i) 
+        course_params["end_time(5i)"].to_i)
       end
     end
 
-    def find_courses(s_time, e_time)
-      current_user.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", s_time, e_time, s_time, e_time)
-    end
-
     def is_course_exist_with_same_time?
-      courses = find_courses(start_time, end_time)
+      courses = current_user.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
+      courses = courses.where.not(id: @course.id) if @course.persisted?
       return courses.present?
     end
 
@@ -123,9 +110,20 @@ class Teacher::CoursesController < ApplicationController
       class_room = ClassRoom.find(course_params[:class_room_id])
       if class_room
         courses = class_room.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
+        courses = courses.where.not(id: @course.id) if @course.persisted?
         return courses.present?
       else
         return false
+      end
+    end
+
+    def ensure_valid_timings
+      if start_time > end_time
+        render_type = params[:action] == "update" ? :edit : :new
+        respond_to do |format|
+          flash[:error] = "Please ensure course start time is before end time"
+          format.html{render render_type}
+        end
       end
     end
 
@@ -133,12 +131,10 @@ class Teacher::CoursesController < ApplicationController
       @class_rooms = ClassRoom.all.pluck(:name, :id)
     end
 
-    # Use callbacks to share common setup or constraints between actions.
     def set_course
       @course = Course.find(params[:id])
     end
 
-    # Never trust parameters from the scary internet, only allow the white list through.
     def course_params
       params.require(:course).permit(:title, :description, :notes, :start_time, :end_time, :class_room_id)
     end
