@@ -28,10 +28,10 @@ class Teacher::CoursesController < ApplicationController
   # POST /courses.json
   def create
     @course = current_user.courses.new(course_params)
-    if is_course_exist_with_same_time
+    if is_course_exist_with_same_time?
       flash[:error] = "Course already present in the given timings, please change timings"
       render :new
-    elsif is_class_room_occupied
+    elsif is_class_room_occupied?
       flash[:error] = "Class room already occupied by other course, please change the class room or timings"
       render :new
     else
@@ -50,10 +50,10 @@ class Teacher::CoursesController < ApplicationController
   # PATCH/PUT /courses/1
   # PATCH/PUT /courses/1.json
   def update
-    if is_course_exist_with_same_time
+    if is_course_exist_with_same_time?
       flash[:error] = "Course already present in tthe given timings, please change timings"
       render :edit
-    elsif is_class_room_occupied
+    elsif is_class_room_occupied?
       flash[:error] = "Class room already occupied by other course, please change the class room or timings"
       render :new
     else
@@ -91,31 +91,35 @@ class Teacher::CoursesController < ApplicationController
     end
 
     def start_time
-      DateTime.new(course_params["start_time(1i)"].to_i, 
-      course_params["start_time(2i)"].to_i,
-      course_params["start_time(3i)"].to_i,
-      course_params["start_time(4i)"].to_i,
-      course_params["start_time(5i)"].to_i)
+      @start_time ||= begin 
+        DateTime.new(course_params["start_time(1i)"].to_i, 
+        course_params["start_time(2i)"].to_i,
+        course_params["start_time(3i)"].to_i,
+        course_params["start_time(4i)"].to_i,
+        course_params["start_time(5i)"].to_i)
+      end
     end
 
     def end_time
-      DateTime.new(course_params["end_time(1i)"].to_i, 
-      course_params["end_time(2i)"].to_i,
-      course_params["end_time(3i)"].to_i,
-      course_params["end_time(4i)"].to_i,
-      course_params["end_time(5i)"].to_i)
+      @end_time ||= begin 
+        DateTime.new(course_params["end_time(1i)"].to_i, 
+        course_params["end_time(2i)"].to_i,
+        course_params["end_time(3i)"].to_i,
+        course_params["end_time(4i)"].to_i,
+        course_params["end_time(5i)"].to_i) 
+      end
     end
 
-    def find_courses(start_time, end_time)
-      current_user.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
+    def find_courses(s_time, e_time)
+      current_user.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", s_time, e_time, s_time, e_time)
     end
 
-    def is_course_exist_with_same_time
+    def is_course_exist_with_same_time?
       courses = find_courses(start_time, end_time)
       return courses.present?
     end
 
-    def is_class_room_occupied
+    def is_class_room_occupied?
       class_room = ClassRoom.find(course_params[:class_room_id])
       if class_room
         courses = class_room.courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
