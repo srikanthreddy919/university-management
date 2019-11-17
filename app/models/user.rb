@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :courses
   has_many :course_students
   has_many :class_rooms
+  has_many :joined_courses, through: :course_students, source: :course
 
 
 

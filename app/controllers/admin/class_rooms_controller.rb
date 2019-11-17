@@ -1,5 +1,6 @@
 class Admin::ClassRoomsController < ApplicationController
   before_action :set_class_room, only: [:show, :edit, :update, :destroy]
+  before_action :verify_authorized
 
   # GET /admin/class_rooms
   # GET /admin/class_rooms.json
@@ -62,6 +63,11 @@ class Admin::ClassRoomsController < ApplicationController
   end
 
   private
+
+    def verify_authorized
+      authorize :common, :is_admin?
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_class_room
       @class_room = ClassRoom.find(params[:id])

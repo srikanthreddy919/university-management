@@ -25,3 +25,22 @@
   <strong>Notes:</strong>
   <%= @course.notes %>
 </p>
+<h4>Course enrolled Students</h4>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Student Name</th>
+      <th>Email</th>
+    </tr>
+  </thead>
+  <% if @students.present? %>
+    <tbody>
+      <% @students.each do |student| %>
+        <tr>
+          <td><%= student.first_name + " " + student.last_name %></td>
+          <td><%= student.email %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  <% end %>
+</table>

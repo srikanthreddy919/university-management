@@ -18,3 +18,11 @@
     box-shadow 0.15s ease-in-out;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+.material-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: text-bottom;
+  path {
+    fill: currentColor;
+  }
+}

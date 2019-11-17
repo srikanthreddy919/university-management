@@ -1,5 +1,5 @@
 class Student::CoursesController < ApplicationController
-  before_action :set_course, only: [:show]
+  before_action :set_course, only: [:show, :apply]
 
   # GET student/courses
   # GET student/courses.json
@@ -12,20 +12,21 @@ class Student::CoursesController < ApplicationController
   def show
   end
 
+  def apply
+    if is_course_exist_with_same_time
+      redirect_to student_courses_path, alert: "You have already joined to another course with in the same time"
+    else
+      current_user.course_students.create(course_id: @course.id)
+      redirect_to student_courses_path, notice: "Applied successfully"
+    end
+  end
+
 
   private
     def is_course_exist_with_same_time
-      start_time = DateTime.new(course_params["start_time(1i)"].to_i, 
-      course_params["start_time(2i)"].to_i,
-      course_params["start_time(3i)"].to_i,
-      course_params["start_time(4i)"].to_i,
-      course_params["start_time(5i)"].to_i)
-      end_time = DateTime.new(course_params["end_time(1i)"].to_i, 
-      course_params["end_time(2i)"].to_i,
-      course_params["end_time(3i)"].to_i,
-      course_params["end_time(4i)"].to_i,
-      course_params["end_time(5i)"].to_i)
-      course = Course.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
+      start_time = @course.start_time
+      end_time = @course.end_time
+      course = current_user.joined_courses.where("start_time BETWEEN ? AND ? OR end_time BETWEEN ? AND ?", start_time, end_time, start_time, end_time)
       return course.present?
     end
     # Use callbacks to share common setup or constraints between actions.

@@ -21,7 +21,13 @@
         <td><%= course.start_time.strftime("%I:%M %p") %></td>
         <td><%= course.end_time.strftime("%I:%M %p") %></td>
         <td><%= link_to 'Show', [:student, course] %></td>
-        <td><%= link_to "Apply",[:student, course] %></td>
+        <% if is_applied_to_course(course.id) %>
+          <td class="text-success">Applied <svg class="material-icon" viewBox="0 0 24 24">
+              <path d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z"/>
+            </svg></td>
+        <% else %>
+          <td><%= link_to "Apply", apply_student_course_path(course), method: :post %></td>
+        <% end %>
       </tr>
     <% end %>
   </tbody>

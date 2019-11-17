@@ -5,20 +5,34 @@ application up and running.
 
 Things you may want to cover:
 
-* Ruby version
+- Ruby version
 
-* System dependencies
+```ruby
+ruby > = 2.6
+```
 
-* Configuration
+- Rails version
 
-* Database creation
+```
+rails 6
+```
 
-* Database initialization
+- Commands to run
 
-* How to run the test suite
+```
+rake db:create db:migrate db:seed
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+- To start the server
 
-* Deployment instructions
+```
+rails s
+```
 
-* ...
+- To start webpack-dev server
+
+```
+bin/webpack-dev-server
+```
+
+- Find the required login details in `seeds.rb`

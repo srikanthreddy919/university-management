@@ -1,15 +1,18 @@
 class Teacher::CoursesController < ApplicationController
   before_action :set_course, only: [:show, :edit, :update, :destroy]
+  before_action :verify_authorized, only: [:index, :new]
+  before_action :verify_authorized_course, only: [:show, :edit, :destroy]
 
   # GET /courses
   # GET /courses.json
   def index
-    @courses = Course.all
+    @courses = current_user.courses
   end
 
   # GET /courses/1
   # GET /courses/1.json
   def show
+    @students = @course.users
   end
 
   # GET /courses/new
@@ -72,6 +75,15 @@ class Teacher::CoursesController < ApplicationController
   end
 
   private
+
+    def verify_authorized_course
+      authorize @course
+    end
+
+    def verify_authorized
+      authorize :common, :is_teacher?
+    end
+
     def is_course_exist_with_same_time
       start_time = DateTime.new(course_params["start_time(1i)"].to_i, 
       course_params["start_time(2i)"].to_i,
